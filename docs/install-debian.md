@@ -8,7 +8,7 @@ apt-get install -y git
 git clone https://github.com/ronbercito/dvb-xtream.git /opt/dvb-xtream-src
 cd /opt/dvb-xtream-src
 git switch feat/mvp-backend
-./scripts/install-debian.sh
+bash ./scripts/install-debian.sh
 ```
 
 Si el repositorio ya está clonado, actualizar la rama y volver a instalar:
@@ -16,7 +16,7 @@ Si el repositorio ya está clonado, actualizar la rama y volver a instalar:
 ```sh
 cd /opt/dvb-xtream-src
 git pull --ff-only origin feat/mvp-backend
-./scripts/install-debian.sh
+bash ./scripts/install-debian.sh
 ```
 
 El instalador crea `/etc/dvb-xtream.env` con una clave aleatoria de administración. Guardar esa clave para entrar al panel en `http://IP_DEL_CONTENEDOR:8000/admin`. Ajustar `DVB_XTREAM_PUBLIC_URL` a la dirección que alcanzan los clientes. Configurar `TVH_BASE_URL`, `TVH_USERNAME` y `TVH_PASSWORD` para el servicio Tvheadend.
