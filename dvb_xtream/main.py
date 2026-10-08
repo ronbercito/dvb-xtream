@@ -125,11 +125,7 @@ def playlist(username: str, password: str, output: str = "ts"):
 
 
 @app.get("/xmltv.php")
-def xmltv(username: str | None = None, password: str | None = None):
-    if username or password:
-        if not username or not password:
-            raise HTTPException(status_code=401, detail="Credenciales incompletas")
-        client_user(username, password)
+def xmltv():
     document = '<?xml version="1.0" encoding="UTF-8"?>\n<tv generator-info-name="DVB-Xtream"></tv>\n'
     return PlainTextResponse(document, media_type="application/xml")
 
