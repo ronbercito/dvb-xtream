@@ -138,7 +138,7 @@ async def live_stream(username: str, password: str, stream_id: int, extension: s
         sessions.add(session_id)
 
     url = f"{settings.tvh_base_url}/stream/channel/{quote(channel['tvh_uuid'], safe='')}"
-    auth = (settings.tvh_username, settings.tvh_password) if settings.tvh_username else None
+    auth = httpx.DigestAuth(settings.tvh_username, settings.tvh_password) if settings.tvh_username else None
     upstream_client = httpx.AsyncClient(timeout=None, follow_redirects=True, auth=auth)
     try:
         params = {"profile": settings.tvh_stream_profile} if settings.tvh_stream_profile else None
