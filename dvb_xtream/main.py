@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime, timezone
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
@@ -79,9 +79,12 @@ def player_api(username: str, password: str, action: str | None = None, category
         return [stream for stream in streams if category_id is None or stream["category_id"] == category_id]
     if action:
         return []
+    public_address = urlsplit(settings.public_url)
+    protocol = public_address.scheme or "http"
+    server_port = public_address.port or (443 if protocol == "https" else 80)
     return {
         "user_info": user_info(user),
-        "server_info": {"url": settings.public_url, "port": "80", "https_port": "443", "server_protocol": "http", "timezone": "UTC", "timestamp_now": int(datetime.now(timezone.utc).timestamp()), "time_now": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")},
+        "server_info": {"url": public_address.hostname or public_address.netloc or settings.public_url, "port": str(server_port), "https_port": str(server_port if protocol == "https" else 443), "server_protocol": protocol, "timezone": "UTC", "timestamp_now": int(datetime.now(timezone.utc).timestamp()), "time_now": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")},
         "available_channels": len(channels),
         "live_categories": category_list,
         "live_streams": streams,
