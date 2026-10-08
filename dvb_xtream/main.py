@@ -15,8 +15,7 @@ from .db import authenticate, connection, hash_password, initialize
 settings = get_settings()
 initialize(settings.database_path)
 app = FastAPI(title="DVB-Xtream", version="0.1.0")
-access_logger = logging.getLogger("dvb_xtream.access")
-access_logger.setLevel(logging.INFO)
+access_logger = logging.getLogger("uvicorn.error")
 
 
 @app.middleware("http")
