@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DVB-Xtream · Administración</title>
+  <style>
+    :root{font:15px system-ui,sans-serif;color:#17212b;background:#f3f6f8}body{max-width:1000px;margin:32px auto;padding:0 18px}h1{margin-bottom:4px}p{color:#536271}.bar,.card{background:white;border:1px solid #d8e0e6;border-radius:10px;padding:18px;margin:16px 0}.bar{display:flex;gap:10px;align-items:center}input,button{font:inherit;padding:9px 11px;border:1px solid #bac6cf;border-radius:6px}input{max-width:100%}button{background:#1457a6;color:#fff;border:0;cursor:pointer}button.secondary{background:#526575}form{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 20px}form input{flex:1 1 150px}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid #e3e9ed;overflow-wrap:anywhere}.status{min-height:1.4em;color:#1457a6}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:700px){.grid{grid-template-columns:1fr}.bar{align-items:stretch;flex-direction:column}}
+  </style>
+</head>
+<body>
+  <h1>DVB-Xtream</h1><p>Administración local de cuentas y canales</p>
+  <div class="bar"><label for="key">Clave de administración</label><input id="key" type="password" autocomplete="current-password"><button onclick="connect()">Conectar</button><button class="secondary" onclick="logout()">Cerrar sesión</button></div>
+  <div id="status" class="status" role="status"></div>
+  <div class="grid">
+    <section class="card"><h2>Crear usuario</h2>
+      <form id="user-form"><input name="username" placeholder="Usuario" required pattern="[A-Za-z0-9_.-]+"><input name="password" type="password" placeholder="Contraseña (mín. 8)" required minlength="8"><input name="expires_at" type="datetime-local" aria-label="Vencimiento"><input name="max_connections" type="number" min="1" max="100" value="1" title="Conexiones simultáneas"><button>Crear</button></form>
+      <table><thead><tr><th>Usuario</th><th>Vence</th><th>Conexiones</th><th>Activo</th></tr></thead><tbody id="users"></tbody></table>
+    </section>
+    <section class="card"><h2>Agregar canal de Tvheadend</h2>
+      <form id="channel-form"><input name="name" placeholder="Nombre del canal" required><input name="tvh_uuid" placeholder="UUID de canal Tvheadend" required><input name="category" placeholder="Categoría" value="General"><button>Agregar</button></form>
+      <table><thead><tr><th>Canal</th><th>Categoría</th><th>UUID Tvheadend</th></tr></thead><tbody id="channels"></tbody></table>
+    </section>
+  </div>
+  <script>
+    const keyInput=document.querySelector('#key'),statusBox=document.querySelector('#status');
+    keyInput.value=sessionStorage.getItem('dvbAdminKey')||'';
+    async function api(path,options={}){const response=await fetch(path,{...options,headers:{'Content-Type':'application/json','X-Admin-Key':keyInput.value,...options.headers}});if(!response.ok){const info=await response.json().catch(()=>({}));throw new Error(info.detail||`Error HTTP ${response.status}`)}return response.json()}
+    async function connect(){sessionStorage.setItem('dvbAdminKey',keyInput.value);try{await Promise.all([loadUsers(),loadChannels()]);statusBox.textContent='Conectado'}catch(error){statusBox.textContent=error.message}}
+    function logout(){sessionStorage.removeItem('dvbAdminKey');keyInput.value='';document.querySelector('#users').replaceChildren();document.querySelector('#channels').replaceChildren();statusBox.textContent='Sesión cerrada'}
+    async function loadUsers(){const rows=await api('/admin/users');document.querySelector('#users').innerHTML=rows.map(x=>`<tr><td>${escapeHtml(x.username)}</td><td>${x.expires_at?new Date(x.expires_at).toLocaleString():'Sin vencimiento'}</td><td>${x.max_connections}</td><td>${x.enabled?'Sí':'No'}</td></tr>`).join('')}
+    async function loadChannels(){const rows=await api('/admin/channels');document.querySelector('#channels').innerHTML=rows.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.category)}</td><td>${escapeHtml(x.tvh_uuid)}</td></tr>`).join('')}
+    function escapeHtml(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+    document.querySelector('#user-form').addEventListener('submit',async event=>{event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget));const local=data.expires_at;delete data.expires_at;data.expires_at=local?new Date(local).toISOString():null;data.max_connections=Number(data.max_connections);try{await api('/admin/users',{method:'POST',body:JSON.stringify(data)});event.currentTarget.reset();event.currentTarget.max_connections.value=1;await loadUsers();statusBox.textContent='Usuario creado'}catch(error){statusBox.textContent=error.message}});
+    document.querySelector('#channel-form').addEventListener('submit',async event=>{event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget));try{await api('/admin/channels',{method:'POST',body:JSON.stringify(data)});event.currentTarget.reset();event.currentTarget.category.value='General';await loadChannels();statusBox.textContent='Canal agregado'}catch(error){statusBox.textContent=error.message}});
+  </script>
+</body>
+</html>

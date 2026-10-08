@@ -27,4 +27,6 @@ Panel local para recibir y distribuir canales DVB-S/S2 con acceso compatible con
 
 ## Estado
 
-Repositorio recién iniciado. La integración DVB real depende de identificar la TBS de prueba y pasar sus dispositivos al contenedor de desarrollo.
+MVP inicial en desarrollo: API Xtream para autenticación, categorías/canales en vivo, playlist M3U, panel local de alta de cuentas y canales, vencimiento y límite de conexiones simultáneas. Tvheadend entrega el canal DVB y DVB-Xtream retransmite el TS sin transcodificar.
+
+La integración DVB real depende de identificar la TBS de prueba y pasar sus dispositivos al contenedor Debian 13 de desarrollo. Consulta [la guía de instalación](docs/install-debian.md) y [la arquitectura](docs/architecture.md).
