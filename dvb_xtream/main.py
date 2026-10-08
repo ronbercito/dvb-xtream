@@ -139,10 +139,10 @@ async def live_stream(username: str, password: str, stream_id: int, extension: s
 
     url = f"{settings.tvh_base_url}/stream/channel/{quote(channel['tvh_uuid'], safe='')}"
     auth = (settings.tvh_username, settings.tvh_password) if settings.tvh_username else None
-    upstream_client = httpx.AsyncClient(timeout=None, follow_redirects=True)
+    upstream_client = httpx.AsyncClient(timeout=None, follow_redirects=True, auth=auth)
     try:
         params = {"profile": settings.tvh_stream_profile} if settings.tvh_stream_profile else None
-        upstream_request = upstream_client.build_request("GET", url, params=params, auth=auth)
+        upstream_request = upstream_client.build_request("GET", url, params=params)
         upstream_response = await upstream_client.send(upstream_request, stream=True)
         if upstream_response.status_code >= 400:
             upstream_response.raise_for_status()
