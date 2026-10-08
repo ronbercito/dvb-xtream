@@ -23,11 +23,15 @@ async def safe_access_log(request: Request, call_next):
     response = await call_next(request)
     path = request.url.path
     if path.startswith("/live/"):
-        path = "/live/<credentials>/<stream>"
+        extension = path.rsplit(".", 1)[-1]
+        extension = extension if extension in {"ts", "m3u8"} else "unknown"
+        path = f"/live/<credentials>/<stream>.{extension}"
     elif path == "/player_api.php":
         path = f"{path} action={request.query_params.get('action') or 'login'}"
     elif path == "/get.php":
         path = "/get.php playlist"
+    elif path == "/xmltv.php":
+        path = "/xmltv.php EPG"
     access_logger.info("%s %s %d", request.method, path, response.status_code)
     return response
 
@@ -72,7 +76,7 @@ def user_info(user: Any) -> dict[str, Any]:
         "status": "Active", "exp_date": str(exp_ts), "is_trial": "0",
         "active_cons": str(len(active_streams.get(user["username"], set()))),
         "created_at": "", "max_connections": str(user["max_connections"]),
-        "allowed_output_formats": ["ts", "m3u8"],
+        "allowed_output_formats": ["ts"],
     }
 
 
@@ -120,10 +124,20 @@ def playlist(username: str, password: str, output: str = "ts"):
     return PlainTextResponse("\n".join(lines) + "\n", media_type="audio/x-mpegurl")
 
 
+@app.get("/xmltv.php")
+def xmltv(username: str | None = None, password: str | None = None):
+    if username or password:
+        if not username or not password:
+            raise HTTPException(status_code=401, detail="Credenciales incompletas")
+        client_user(username, password)
+    document = '<?xml version="1.0" encoding="UTF-8"?>\n<tv generator-info-name="DVB-Xtream"></tv>\n'
+    return PlainTextResponse(document, media_type="application/xml")
+
+
 @app.get("/live/{username}/{password}/{stream_id}.{extension}")
 async def live_stream(username: str, password: str, stream_id: int, extension: str, request: Request):
     user = client_user(username, password)
-    if extension not in {"ts", "m3u8"}:
+    if extension != "ts":
         raise HTTPException(status_code=404, detail="Formato no soportado")
     with connection(settings.database_path) as db:
         channel = db.execute("SELECT * FROM channels WHERE id = ? AND enabled = 1", (stream_id,)).fetchone()
