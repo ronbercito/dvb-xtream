@@ -9,6 +9,7 @@ Panel local para recibir y distribuir canales DVB-S/S2 con acceso compatible con
 - Permitir inicio de sesión de clientes en apps compatibles con Xtream Codes API.
 - Administrar vencimiento, límite de conexiones simultáneas y estado de cada cuenta.
 - Entregar el flujo directamente desde el servidor de TV, sin transcodificar por defecto.
+- Permitir seleccionar el perfil de salida de Tvheadend mediante `TVH_STREAM_PROFILE`.
 - Incluir un instalador reproducible para un contenedor limpio Debian 13 en Proxmox.
 
 ## Arquitectura inicial
@@ -30,3 +31,4 @@ Panel local para recibir y distribuir canales DVB-S/S2 con acceso compatible con
 MVP inicial en desarrollo: API Xtream para autenticación, categorías/canales en vivo, playlist M3U, panel local de alta de cuentas y canales, vencimiento y límite de conexiones simultáneas. Tvheadend entrega el canal DVB y DVB-Xtream retransmite el TS sin transcodificar.
 
 La integración DVB real depende de identificar la TBS de prueba y pasar sus dispositivos al contenedor Debian 13 de desarrollo. Consulta [la guía de instalación](docs/install-debian.md) y [la arquitectura](docs/architecture.md).
+

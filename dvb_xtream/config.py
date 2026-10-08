@@ -11,6 +11,7 @@ class Settings:
     tvh_base_url: str
     tvh_username: str
     tvh_password: str
+    tvh_stream_profile: str
 
 
 def get_settings() -> Settings:
@@ -21,4 +22,6 @@ def get_settings() -> Settings:
         tvh_base_url=os.getenv("TVH_BASE_URL", "http://127.0.0.1:9981").rstrip("/"),
         tvh_username=os.getenv("TVH_USERNAME", ""),
         tvh_password=os.getenv("TVH_PASSWORD", ""),
+        tvh_stream_profile=os.getenv("TVH_STREAM_PROFILE", "pass").strip(),
     )
+

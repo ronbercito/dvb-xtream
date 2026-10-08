@@ -122,7 +122,8 @@ async def live_stream(username: str, password: str, stream_id: int, extension: s
     auth = (settings.tvh_username, settings.tvh_password) if settings.tvh_username else None
     upstream_client = httpx.AsyncClient(timeout=None, follow_redirects=True)
     try:
-        upstream_request = upstream_client.build_request("GET", url, auth=auth)
+        params = {"profile": settings.tvh_stream_profile} if settings.tvh_stream_profile else None
+        upstream_request = upstream_client.build_request("GET", url, params=params, auth=auth)
         upstream_response = await upstream_client.send(upstream_request, stream=True)
         if upstream_response.status_code >= 400:
             upstream_response.raise_for_status()
@@ -201,3 +202,4 @@ def admin_page():
 @app.exception_handler(httpx.HTTPError)
 async def upstream_error_handler(_request: Request, exc: httpx.HTTPError):
     return JSONResponse(status_code=502, content={"detail": f"No se pudo conectar con Tvheadend: {type(exc).__name__}"})
+
