@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import quote, urlsplit
@@ -14,6 +15,22 @@ from .db import authenticate, connection, hash_password, initialize
 settings = get_settings()
 initialize(settings.database_path)
 app = FastAPI(title="DVB-Xtream", version="0.1.0")
+access_logger = logging.getLogger("dvb_xtream.access")
+access_logger.setLevel(logging.INFO)
+
+
+@app.middleware("http")
+async def safe_access_log(request: Request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith("/live/"):
+        path = "/live/<credentials>/<stream>"
+    elif path == "/player_api.php":
+        path = f"{path} action={request.query_params.get('action') or 'login'}"
+    elif path == "/get.php":
+        path = "/get.php playlist"
+    access_logger.info("%s %s %d", request.method, path, response.status_code)
+    return response
 
 # Tracks active playback requests for the lifetime of this process. Production
 # deployment initially uses one worker so all requests share this registry.
